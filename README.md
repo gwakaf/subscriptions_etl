@@ -22,7 +22,8 @@ Data is updated on daily basis, ingested by incoming .csv files, validated, tran
 AWS S3, EMR, Spark, AWS Glue Crawler, AWS Glue Data Catalog, Airflow.
 
 ## Architecture
-Image
+![Alt Text](https://github.com/user-attachments/assets/1259933c-a65a-4363-b6b1-00ded81380ee)
+
 + Pipeline is orchestrated with Airflow 
 + Sensor is waiting for new files to be uploaded to S3 bucket 
 + New files are copied to SSOT S3 location
