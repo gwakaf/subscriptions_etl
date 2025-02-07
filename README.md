@@ -1,0 +1,66 @@
+# EMR SPARK ETL Pipeline
+Data pipeline handling daily data ingestion with spark jobs on AWS infrastructure applying SDC (slow changing dimensions) type 2 data modeling approach.
+
+
+## Table of Contents
+- [Overview](#overview)
+- [Tech Stack and Architecture](#tech-stack-and-architecture)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Configuration](#configuration)
+  - [Installation](#installation)
+- [Usage](#usage)
+- [Testing](#testing)
+
+
+## Overview
+This pipeline processes meadia application subscriptions data, tracking changes in transactions, subscriptions and users information.
+Data is updated on daily basis, ingested by incoming .csv files, validated, transformed and stored.
+
+
+## Tech Stack 
+AWS S3, EMR, Spark, AWS Glue Crawler, AWS Glue Data Catalog, Airflow.
+
+## Architecture
+Image
++ Pipeline is orchestrated with Airflow 
++ Sensor is waiting for new files to be uploaded to S3 bucket 
++ New files are copied to SSOT S3 location
++ Spark job reads the files, checks the schemas
++ Spark job transformes the data, applies SCD approach
++ Spark job updates the existed records
++ Spark job write partitioned data as parquet files
++ AWS Glue Crawler is triggered to reference new files in the existing AWS Glue Catalog
++ Clean up 
+
+## Getting Started
+### Prerequisites
+- docker to run airflow
+- AWS account
+- AWS S3 bucket with existed data
+- AWS Glue Data Catalog
+- AWS Glue Crawler
+  
+### Configuration
+User has to set up environmental variables for:
+- AWS S3
+- AWS EMR
+- AWS Glue
+
+The required  dependencies are defined in docker-compose.yaml file as PIP_ADDITIONAL_REQUIREMENTS
+
+### Installation
+1. Clone the repository  
+2. Add your .env file with environment variables (refer to the configuration section for details).
+3. Start the Docker containers using the docker-compose.yaml file:
+   ```bash
+   docker-compose up
+4. Trigger airflow dag manually or schedule it
+
+## Usage
++ ETL pipeline runs daily orchestrated by airflow, getting new data files, transforming and saving them with pyspark jobs
+
+
+
+
+   
