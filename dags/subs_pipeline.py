@@ -1,4 +1,5 @@
-from airflow.decorators import dag
+from airflow.decorators import dag, task
+from airflow.models.baseoperator import chain
 from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
 from airflow.providers.amazon.aws.operators.s3 import S3CopyObjectOperator
 from airflow.providers.amazon.aws.operators.emr import EmrAddStepsOperator, EmrCreateJobFlowOperator, EmrTerminateJobFlowOperator
@@ -10,14 +11,12 @@ from datetime import datetime, timedelta
 S3_BUCKET = "s3://subscriprions-emr-etl"
 S3_BUCKET_SOURCE = f"{S3_BUCKET}/data/source"
 S3_BUCKET_SSOT = f"{S3_BUCKET}/data/ssot"
-S3_BUCKET_OUTPUT = f"{S3_BUCKET}/output"
+S3_BUCKET_PROD = f"{S3_BUCKET}/prod"
 subscriptions_data = "subscriptions"
 transactions_data = "transaction"
 users_data = "users"
 price_plans_data = "price_plans"
 data_file_extension = ".csv"
-aggregated_data_s3_bucket = "ba-airflow/tpc_ds_silver/customers_having_more_store_sales"
-
 
 #EMR cluster
 job_overflow_overrides = {
@@ -239,4 +238,9 @@ def subs_emr_pipeline():
         config=glue_crawler_config,
         aws_conn_id="aws_s3"
     )
+    
+    chain([wait_for_subscriprions_data, wait_for_price_plans_data, wait_for_transactions_data, wait_for_users_data],
+          [copy_subscriprions_data, copy_price_plans_data, copy_transactions_data, copy_users_data],
+          create_emr_cluster, [add_price_plans_step,add_subscriptions_step,add_transactions_step, add_users_step],
+          terminate_emr_cluster, glue_crawler)
     
