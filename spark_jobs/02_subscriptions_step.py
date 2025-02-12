@@ -61,7 +61,7 @@ subscriptions_df_existing = spark.read.format("parquet").load(subscriptions_file
 subscriptions_df_incoming = subscriptions_df_incoming.withColumn("eff_start_date", batch_date_dt) \
     .withColumn("eff_end_date", F.lit(None).cast("date"))
     
-# Union existing and incoming dataframes)
+# Union existing and incoming dataframes
 df_union = subscriptions_df_existing.unionByName(subscriptions_df_incoming)
 
 # Define Window filter changed records 
