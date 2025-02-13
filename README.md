@@ -24,6 +24,9 @@ AWS S3, EMR, Spark, AWS Glue Crawler, AWS Glue Data Catalog, Airflow.
 ## Architecture
 ![Alt Text](https://github.com/user-attachments/assets/1259933c-a65a-4363-b6b1-00ded81380ee)
 
+### ETL DAG
+![Alt Text](https://github.com/user-attachments/assets/e7571268-6d32-407e-9130-637a8d3141ac)
+
 + Pipeline is orchestrated with Airflow 
 + Sensor is waiting for new files to be uploaded to S3 bucket 
 + New files are copied to SSOT S3 location
