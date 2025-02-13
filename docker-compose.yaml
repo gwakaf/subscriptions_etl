@@ -38,13 +38,12 @@
 #
 # Feel free to modify this file to suit your needs.
 ---
-version: '3'
 x-airflow-common:
   &airflow-common
   # In order to add custom dependencies or upgrade provider packages you can use your extended image.
   # Comment the image line, place your Dockerfile in the directory where you placed the docker-compose.yaml
   # and uncomment the "build" line below, Then run `docker-compose build` to build the images.
-  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.3.2}
+  image: ${AIRFLOW_IMAGE_NAME:-apache/airflow:2.9.0-python3.12}
   # build: .
   environment:
     &airflow-common-env
@@ -58,15 +57,15 @@ x-airflow-common:
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
-    AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-    AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
-    REGION_NAME: ${REGION_NAME}
-    REDSHIFT_HOST: ${REDSHIFT_HOST}
-    REDSHIFT_PORT: ${REDSHIFT_PORT}
-    REDSHIFT_DBNAME: ${REDSHIFT_DBNAME}
-    REDSHIFT_USER: ${REDSHIFT_USER}
-    REDSHIFT_PASSWORD: ${REDSHIFT_PASSWORD}
-    REDSHIFT_IAM_ROLE: ${REDSHIFT_IAM_ROLE}
+    # AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+    # AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+    # REGION_NAME: ${REGION_NAME}
+    # REDSHIFT_HOST: ${REDSHIFT_HOST}
+    # REDSHIFT_PORT: ${REDSHIFT_PORT}
+    # REDSHIFT_DBNAME: ${REDSHIFT_DBNAME}
+    # REDSHIFT_USER: ${REDSHIFT_USER}
+    # REDSHIFT_PASSWORD: ${REDSHIFT_PASSWORD}
+    # REDSHIFT_IAM_ROLE: ${REDSHIFT_IAM_ROLE}
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:- praw boto3 configparser psycopg2-binary}
   volumes:
     - ./dags:/opt/airflow/dags
