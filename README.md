@@ -4,7 +4,10 @@ Data pipeline handling daily data ingestion with spark jobs on AWS infrastructur
 
 ## Table of Contents
 - [Overview](#overview)
-- [Tech Stack and Architecture](#tech-stack-and-architecture)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+  - [ETL DAG](#etl-dag)
+  - [Data Modeling Approach](#data-modeling-approach)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Configuration](#configuration)
