@@ -43,8 +43,8 @@ For dimensional tables this project uses SCD type 2 approach to have active reco
 + Load incoming .csv to a data frame df1
 + Load existed data to a data frame df2 (the latest snapshot of all active records based on batch_date -1 day)
 + Add necessary fields to df1: 
-	eff_start_date (DateType()) - The date when the record becomes valid
-	eff_end_date (DateType(), nullable) - The timestamp when the record is replaced by a new version. If NULL, the record is the current active version
+	- eff_start_date (DateType()) - The date when the record becomes valid.
+	- eff_end_date (DateType(), nullable) - The timestamp when the record is replaced by a new version. If NULL, the record is the current active version.
 + Union both dataframes
 + Create Window function to define row_numbers for repeated fields that should be unique
 + Add the row_numbers column to the union data frame
