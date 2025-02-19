@@ -2,28 +2,17 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType, DateType, TimestampType
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
-import sys
-from datetime import datetime, timedelta
+import config
 
 spark = SparkSession.builder \
     .appName("media_app_subscriptions") \
     .enableHiveSupport() \
     .getOrCreate()
     
-
-S3_BUCKET = "s3://subscriprions-emr-etl"
-S3_BUCKET_SSOT = f"{S3_BUCKET}/data/ssot"
-S3_BUCKET_PROD = f"{S3_BUCKET}/prod"
 subscriptions_data = "subscriptions"
-
-batch_date = sys.argv[1]  # {{ ds_nodash }}
-batch_date_dt = datetime.strptime(batch_date, "%Y%m%d")
-latest_date_dt = batch_date_dt - timedelta(days=1)
-latest_date = latest_date_dt.strftime("%Y%m%d")
-
-subscriptions_file_path_incoming =f"{S3_BUCKET_SSOT}/{subscriptions_data}_{batch_date}.csv"
-subscriptions_file_path_existed = f"{S3_BUCKET_PROD}/{subscriptions_data}/dt={latest_date}"
-subscriptions_file_path_latest = f"{S3_BUCKET_PROD}/{subscriptions_data}/dt={batch_date}"
+subscriptions_file_path_incoming =f"{config.S3_BUCKET_SSOT}/{subscriptions_data}_{config.batch_date}.csv"
+subscriptions_file_path_existed = f"{config.S3_BUCKET_PROD}/{subscriptions_data}/dt={config.latest_date}"
+subscriptions_file_path_latest = f"{config.S3_BUCKET_PROD}/{subscriptions_data}/dt={config.batch_date}"
 
 subscriptions_schema_incoming = StructType([
     StructField("user_id", IntegerType(), True),
@@ -58,7 +47,7 @@ subscriptions_df_incoming = spark.read.csv(subscriptions_file_path_incoming,
 subscriptions_df_existing = spark.read.format("parquet").load(subscriptions_file_path_existed)
 
 # Add Effective Start and End Dates to Incoming Data (For New Records)
-subscriptions_df_incoming = subscriptions_df_incoming.withColumn("eff_start_date", batch_date_dt) \
+subscriptions_df_incoming = subscriptions_df_incoming.withColumn("eff_start_date", config.batch_date_dt) \
     .withColumn("eff_end_date", F.lit(None).cast("date"))
     
 # Union existing and incoming dataframes
@@ -79,7 +68,7 @@ subscriptions_df_historic = df_ranked.filter((F.col("row_number") > 1) | F.col("
     .drop("row_number")
     
 # Update effective end date for historical records
-subscriptions_df_historic = subscriptions_df_historic.withColumn("eff_end_date", batch_date_dt)
+subscriptions_df_historic = subscriptions_df_historic.withColumn("eff_end_date", config.batch_date_dt)
 
 
 # Write the latest snapshot data to S3 storage
