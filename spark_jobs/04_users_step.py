@@ -36,7 +36,7 @@ users_schema_existed = StructType([
     StructField("user_created_timestamp", TimestampType(), True),
     StructField("user_updated_timestamp", TimestampType(), True),
     StructField("is_subs_active", BooleanType, False),
-    StructField("eff_start_date", DateType(), True),
+    StructField("eff_start_date", DateType(), False),
     StructField("eff_end_date", DateType(), True)
 ])
 
@@ -77,14 +77,14 @@ users_df_historic = users_df_historic.withColumn("eff_end_date", config.batch_da
 users_df_latest.write \
     .format("parquet") \
     .mode("overwrite") \
-    .partitionBy("price_plan_id") \
+    .partitionBy("eff_start_date") \
     .save(users_file_path_latest)
 
 # Update historic snapshot data on S3 storage    
 users_df_historic.write \
     .format("parquet") \
     .mode("overwrite") \
-    .partitionBy("user_updated_timestamp") \
+    .partitionBy("eff_start_date") \
     .save(users_file_path_existed)
 
 

@@ -34,7 +34,7 @@ subscriptions_schema_existed = StructType([
     StructField("create_timestamp", TimestampType(), True),
     StructField("update_timestamp", TimestampType(), True),
     StructField("subs_cancel_timestamp", TimestampType(), True),
-    StructField("eff_start_date", DateType(), True),
+    StructField("eff_start_date", DateType(), False),
     StructField("eff_end_date", DateType(), True)
 ])
 
@@ -75,14 +75,14 @@ subscriptions_df_historic = subscriptions_df_historic.withColumn("eff_end_date",
 subscriptions_df_latest.write \
     .format("parquet") \
     .mode("overwrite") \
-    .partitionBy("price_plan_id") \
+    .partitionBy("eff_start_date") \
     .save(subscriptions_file_path_latest)
 
 # Update historic snapshot data on S3 storage    
 subscriptions_df_historic.write \
     .format("parquet") \
     .mode("overwrite") \
-    .partitionBy("price_plan_id") \
+    .partitionBy("eff_start_date") \
     .save(subscriptions_file_path_existed)
 
 
