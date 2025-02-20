@@ -69,7 +69,8 @@ step_01_price_plans = [
                 '--deploy-mode',
                 'cluster',
                 "--py-files", S3_ZIP_FILES,
-                f's3://{S3_BUCKET}/emr_files/01_price_plans_step.py'],
+                f's3://{S3_BUCKET}/emr_files/01_price_plans_step.py',
+                "{{ ds_nodash }}"],
         },
     }
 ]
@@ -102,7 +103,8 @@ step_03_transactions = [
                 '--deploy-mode',
                 'cluster',
                 "--py-files", S3_ZIP_FILES,
-                f's3://{S3_BUCKET}/emr_files/03_transactions_step.py'],
+                f's3://{S3_BUCKET}/emr_files/03_transactions_step.py',
+                "{{ ds_nodash }}"],
         },
     }
 ]
@@ -117,7 +119,8 @@ step_04_users = [
                 '--deploy-mode',
                 'cluster',
                 "--py-files", S3_ZIP_FILES,
-                f's3://{S3_BUCKET}/emr_files/04_users_step.py'],
+                f's3://{S3_BUCKET}/emr_files/04_users_step.py',
+                "{{ ds_nodash }}"],
         },
     }
 ]

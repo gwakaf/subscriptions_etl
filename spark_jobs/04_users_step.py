@@ -2,17 +2,28 @@ from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType, DateType, TimestampType, BooleanType
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
+import sys
+from datetime import datetime, timedelta
 import config
 
 spark = SparkSession.builder \
     .appName("media_app_subscriptions") \
     .enableHiveSupport() \
     .getOrCreate()
+try:
+    batch_date = sys.argv[1] # {{ ds_nodash }}
+except Exception as e:
+    print(f"Error with an input execution date parameter. Error {e}")
+    sys.exit(1)
+    
+batch_date_dt = datetime.strptime(batch_date, "%Y%m%d")
+latest_date_dt = batch_date_dt - timedelta(days=1)
+latest_date = latest_date_dt.strftime("%Y%m%d")
     
 users_data = "subscriptions"
-users_file_path_incoming =f"{config.S3_BUCKET_SSOT}/{users_data}_{config.batch_date}.csv"
-users_file_path_existed = f"{config.S3_BUCKET_PROD}/{users_data}/dt={config.latest_date}"
-users_file_path_latest = f"{config.S3_BUCKET_PROD}/{users_data}/dt={config.batch_date}"
+users_file_path_incoming =f"{config.S3_BUCKET_SSOT}/{users_data}_{batch_date}.csv"
+users_file_path_existed = f"{config.S3_BUCKET_PROD}/{users_data}/dt={latest_date}"
+users_file_path_latest = f"{config.S3_BUCKET_PROD}/{users_data}/dt={batch_date}"
 
 
 #user_id,use_name,city,date_od_birth,email,mobile,created_timestamp,updated_timestamps
@@ -49,7 +60,7 @@ users_df_incoming = spark.read.csv(users_file_path_incoming,
 users_df_existing = spark.read.format("parquet").load(users_file_path_existed)
 
 # Add Effective Start and End Dates to Incoming Data (For New Records)
-users_df_incoming = users_df_incoming.withColumn("eff_start_date", config.batch_date_dt) \
+users_df_incoming = users_df_incoming.withColumn("eff_start_date", batch_date_dt) \
     .withColumn("eff_end_date", F.lit(None).cast("date"))
     
 # Union existing and incoming dataframes
@@ -70,7 +81,7 @@ users_df_historic = df_ranked.filter((F.col("row_number") > 1) | F.col("is_subs_
     .drop("row_number")
     
 # Update effective end date for historical records
-users_df_historic = users_df_historic.withColumn("eff_end_date", config.batch_date_dt)
+users_df_historic = users_df_historic.withColumn("eff_end_date", batch_date_dt)
 
 
 # Write the latest snapshot data to S3 storage
