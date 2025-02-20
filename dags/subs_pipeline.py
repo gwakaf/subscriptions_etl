@@ -2,6 +2,7 @@ from airflow.decorators import dag, task
 from airflow.models.baseoperator import chain
 from airflow.providers.amazon.aws.sensors.s3 import S3KeySensor
 from airflow.providers.amazon.aws.operators.s3 import S3CopyObjectOperator
+from airflow.operators.bash import BashOperator
 from airflow.providers.amazon.aws.operators.emr import EmrAddStepsOperator, EmrCreateJobFlowOperator, EmrTerminateJobFlowOperator
 from airflow.utils.trigger_rule import TriggerRule
 from airflow.providers.amazon.aws.operators.glue_crawler import GlueCrawlerOperator
@@ -17,6 +18,9 @@ transactions_data = "transaction"
 users_data = "users"
 price_plans_data = "price_plans"
 data_file_extension = ".csv"
+LOCAL_SCRIPT_PATH = "/opt/airflow/spark_jobs"
+ZIP_FILE_PATH = "/tmp/emr_scripts.zip"
+S3_ZIP_FILES = f"s3://{S3_BUCKET}/emr_files/emr_scripts.zip"
 
 #EMR cluster
 job_overflow_overrides = {
@@ -64,6 +68,7 @@ step_01_price_plans = [
                 'spark-submit',
                 '--deploy-mode',
                 'cluster',
+                "--py-files", S3_ZIP_FILES,
                 f's3://{S3_BUCKET}/emr_files/01_price_plans_step.py'],
         },
     }
@@ -78,6 +83,7 @@ step_02_subscriptions = [
                 'spark-submit',
                 '--deploy-mode',
                 'cluster',
+                "--py-files", S3_ZIP_FILES,
                 f's3://{S3_BUCKET}/emr_files/02_subscriptions_step.py',
                 "{{ ds_nodash }}"
                 ],
@@ -95,6 +101,7 @@ step_03_transactions = [
                 'spark-submit',
                 '--deploy-mode',
                 'cluster',
+                "--py-files", S3_ZIP_FILES,
                 f's3://{S3_BUCKET}/emr_files/03_transactions_step.py'],
         },
     }
@@ -109,6 +116,7 @@ step_04_users = [
                 'spark-submit',
                 '--deploy-mode',
                 'cluster',
+                "--py-files", S3_ZIP_FILES,
                 f's3://{S3_BUCKET}/emr_files/04_users_step.py'],
         },
     }
@@ -186,6 +194,16 @@ def subs_emr_pipeline():
             f"{S3_BUCKET_SSOT}/{price_plans_data}/"
             f"{price_plans_data}_{{ ds_nodash }}{data_file_extension}"
         )
+    )
+    
+    zip_scripts = BashOperator(
+        task_id="zip_scripts",
+        bash_command=f"cd {LOCAL_SCRIPT_PATH} && zip -r {ZIP_FILE_PATH} ."
+    )
+    
+    upload_emr_scripts = BashOperator(
+        task_id="upload_emr_scripts_to_s3",
+        bash_command=f"aws s3 cp {ZIP_FILE_PATH} {S3_ZIP_FILES}"
     )
     
     create_emr_cluster = EmrCreateJobFlowOperator(

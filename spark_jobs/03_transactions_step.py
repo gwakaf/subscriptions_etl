@@ -13,7 +13,6 @@ transactions_file_path_incoming =f"{config.S3_BUCKET_SSOT}/{transactions_data}_{
 transactions_file_path_existed = f"{config.S3_BUCKET_PROD}/{transactions_data}/dt={config.latest_date}"
 transactions_file_path_latest = f"{config.S3_BUCKET_PROD}/{transactions_data}/dt={config.batch_date}"
 
-# Transactions are stored in fact tables and do not need SCD to be applied
 
 transactions_schema = StructType([
     StructField("transaction_id", IntegerType(), True),
