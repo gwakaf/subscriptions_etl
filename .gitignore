@@ -4,3 +4,4 @@ logs/*
 comments/*
 __pycache__/
 .DS_Store
+dags/subs_redshift.py

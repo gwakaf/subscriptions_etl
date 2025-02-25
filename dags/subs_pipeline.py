@@ -260,6 +260,8 @@ def subs_emr_pipeline():
         aws_conn_id="aws_s3"
     )
     
+    
+    
     chain([wait_for_subscriprions_data, wait_for_price_plans_data, wait_for_transactions_data, wait_for_users_data],
           [copy_subscriprions_data, copy_price_plans_data, copy_transactions_data, copy_users_data],
           create_emr_cluster, [add_price_plans_step,add_subscriptions_step,add_transactions_step, add_users_step],
