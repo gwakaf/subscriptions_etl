@@ -84,6 +84,18 @@ The required  dependencies are defined in docker-compose.yaml file as PIP_ADDITI
 ## Usage
 + ETL pipeline runs daily orchestrated by airflow, getting new data files, transforming and saving them with pyspark jobs
 
++ AWS cost estimate, assuming that user uses free tier account, and configuration is minimal.
+  
+| **Service** | **Cost Breakdown**                                                                                                                                                     | **Total Monthly Cost**  |
+|-------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------|
+| **EMR**     | m5.xlarge (4 vCPU, 16 GB RAM) (1 core node only) x $0.096/hour x 15 hours/month (30 min/day)            |  $1.44 |
+| **Glue Crawler**    | 2 minutes per run on 1 DPU,1 DPU-hour × $0.44/hour  (2 min × 30 days = 60 min = 1 DPU-hour)                                                  | $0.44   |
+| **Glue Data Catalog**    | First 1M objects/month → free, First 1M requests/month → free                                       | $0 |
+| **S3 for storage**    | Assume that the data < 5 GB and doesn’t exceed a few thousand requests/day → free                                       | $0 |
+
+  Total: ~$1.88/month
+
+
 
 
 
