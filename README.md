@@ -1,5 +1,5 @@
 # EMR SPARK ETL Pipeline
-Data pipeline handling daily data ingestion with spark jobs on AWS infrastructure applying SDC (slow changing dimensions) type 2 data modeling approach.
+Data pipeline handling daily data ingestion with spark jobs on AWS infrastructure applying SCD (slow changing dimensions) type 2 data modeling approach.
 
 
 ## Table of Contents
@@ -17,7 +17,7 @@ Data pipeline handling daily data ingestion with spark jobs on AWS infrastructur
 
 
 ## Overview
-This pipeline processes meadia application subscriptions data, tracking changes in transactions, subscriptions and users information.
+This pipeline processes media application subscriptions data, tracking changes in transactions, subscriptions and users information.
 Data is updated on daily basis, ingested by incoming .csv files, validated, transformed and stored.
 
 
@@ -34,9 +34,9 @@ AWS S3, EMR, Spark, AWS Glue Crawler, AWS Glue Data Catalog, Airflow.
 + Sensor is waiting for new files to be uploaded to S3 bucket 
 + New files are copied to SSOT S3 location
 + Spark job reads the files, checks the schemas
-+ Spark job transformes the data, applies SCD approach
++ Spark job transforms the data, applies SCD approach
 + Spark job updates the existed records
-+ Spark job write partitioned data as parquet files
++ Spark job writes partitioned data as parquet files
 + AWS Glue Crawler is triggered to reference new files in the existing AWS Glue Catalog
 + Clean up
   
@@ -45,7 +45,7 @@ AWS S3, EMR, Spark, AWS Glue Crawler, AWS Glue Data Catalog, Airflow.
 ![Screenshot 2025-06-10 at 12 53 27 PM](https://github.com/user-attachments/assets/6cf5512b-a563-433a-bb7b-c6f1f8422696)
 For dimensional tables this project uses SCD type 2 approach to have active records available as the latest snapshot and retain historical data, implemented with pyspark jobs:
 + Load incoming .csv to a data frame df1
-+ Load existed data to a data frame df2 (the latest snapshot of all active records based on batch_date -1 day)
++ Load existing data to a data frame df2 (the latest snapshot of all active records based on batch_date -1 day)
 + Add necessary fields to df1: 
 	- eff_start_date (DateType()) - The date when the record becomes valid.
 	- eff_end_date (DateType(), nullable) - The timestamp when the record is replaced by a new version. If NULL, the record is the current active version.
@@ -56,6 +56,44 @@ For dimensional tables this project uses SCD type 2 approach to have active reco
 + Add the row_numbers column to the union data frame
 + Filter the active records based on row_number and other applied conditions -> creating the latest snapshot
 + Filter the inactive records based on row_number and other applied conditions -> creating the historic data snapshot
+
+## Testing and Data Quality
+
+The pipeline is designed with validation checkpoints that can be applied before and after transformation to make sure incoming subscription data is complete, consistent, and safe to load into curated S3/Glue tables.
+
+### Data Quality Checks
+
+| Check | Purpose | Example Validation |
+|---|---|---|
+| Schema validation | Ensure incoming CSV files match the expected structure before transformation | Required columns exist; column data types match expected schema |
+| Required field checks | Prevent incomplete records from being loaded | `user_id`, `subscription_id`, `transaction_id`, and `batch_date` are not null where required |
+| Duplicate key checks | Detect duplicate business keys in incoming data | No duplicate active records for the same `user_id` or `subscription_id` within the same batch |
+| Row-count checks | Verify that data was not accidentally lost during transformation | Input row count is compared with output active and historical record counts |
+| SCD Type 2 correctness checks | Validate historical versioning logic | Only one active record exists per business key; replaced records receive `eff_end_date`; current records keep `eff_end_date = NULL` |
+| Partition existence checks | Confirm that transformed data was written to the expected S3 location | Output Parquet files exist for the processed `batch_date` partition |
+| Glue Catalog checks | Make sure new partitions are discoverable for downstream querying | Glue Crawler completes successfully and updates the Glue Data Catalog | 
+
+### SCD Type 2 Validation Rules
+
+For dimensional tables, the pipeline validates that SCD Type 2 history is preserved correctly:
+
+- Each business key has only one current active record.
+- Active records have `eff_end_date = NULL`.
+- Historical records have a populated `eff_end_date`.
+- When an incoming record changes an existing active record, the previous version is closed and a new active version is created.
+- `eff_start_date` reflects the batch date when the record version became valid.
+- Historical versions are retained instead of overwritten.
+
+### Pipeline Validation Flow
+
+1. Airflow sensor detects a new incoming CSV file in S3.
+2. Spark reads the file and validates the schema.
+3. Spark checks required fields, duplicate keys, and batch-level row counts.
+4. Existing active records are loaded from the previous snapshot.
+5. SCD Type 2 transformation logic creates updated active and historical records.
+6. Output data is written to S3 as partitioned Parquet files.
+7. Glue Crawler updates the Glue Data Catalog.
+8. Downstream users can query the latest active snapshot and historical versions.
 
 ## Getting Started
 ### Prerequisites
