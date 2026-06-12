@@ -17,8 +17,7 @@ Data pipeline handling daily data ingestion with spark jobs on AWS infrastructur
 
 
 ## Overview
-This pipeline processes media application subscriptions data, tracking changes in transactions, subscriptions and users information.
-Data is updated on daily basis, ingested by incoming .csv files, validated, transformed and stored.
+PySpark ETL pipeline for subscription data using Airflow orchestration, AWS S3, EMR, Glue Crawler, Glue Data Catalog, and SCD Type 2 modeling; daily ingestion, schema validation, partitioned Parquet outputs, and historical snapshot logic.
 
 
 ## Tech Stack 
